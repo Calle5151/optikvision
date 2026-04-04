@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OptiVision — Säker Patientöverföring</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script>var _sb=document.createElement("script");_sb.src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js";document.head.appendChild(_sb);</script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js" crossorigin="anonymous"></script>
 <style>
   :root {
     --bg: #F7F6F2;
@@ -1128,10 +1128,20 @@ info.textContent = `Session: ${h}h ${m}m kvar`;
 }
 
 // OTP keyboard navigation
+window.addEventListener(‘load’, function() {
 document.querySelectorAll(’.otp-in’).forEach((input, i, all) => {
 input.addEventListener(‘input’, () => { if (input.value && i < all.length - 1) all[i+1].focus(); });
 input.addEventListener(‘keydown’, e => { if (e.key === ‘Backspace’ && !input.value && i > 0) all[i-1].focus(); });
 });
+var ed = document.getElementById(‘examDate’);
+if (ed) ed.value = new Date().toISOString().split(‘T’)[0];
+var le = document.getElementById(‘loginEmail’);
+if (le) le.value = ‘demo@optiker.se’;
+var lp = document.getElementById(‘loginPassword’);
+if (lp) lp.value = ‘demo1234’;
+showScreen(‘setupScreen’);
+});
+</script>
 
-// Set default date to today
-document.getElementByI
+</body>
+</html>
