@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OptiVision — Säker Patientöverföring</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="supabase.js"></script>
+<script>var _sb=document.createElement("script");_sb.src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js";document.head.appendChild(_sb);</script>
 <style>
   :root {
     --bg: #F7F6F2;
@@ -723,6 +723,10 @@ const alert = document.getElementById(‘setupAlert’);
 
 if (!url || !key) {
 showAlert(alert, ‘Ange både URL och API-nyckel.’, ‘danger’);
+return;
+}
+if (!window.supabase || !window.supabase.createClient) {
+showAlert(alert, ‘Supabase-biblioteket kunde inte laddas. Använd “Kör lokal demo” istället, eller kontrollera att supabase.js finns i samma mapp.’, ‘danger’);
 return;
 }
 try {
