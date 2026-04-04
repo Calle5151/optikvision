@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OptiVision — Säker Patientöverföring</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface2: #F0EFE9;
+    --border: #E2E0D8;
+    --border-strong: #C8C5BA;
+    --text: #1A1916;
+    --text-2: #6B6860;
+    --text-3: #9E9C96;
+    --accent: #1A4D8F;
+    --accent-light: #EAF1FB;
+    --accent-hover: #153D72;
+    --success: #1A6B3C;
+    --success-bg: #EBF7F0;
+    --danger: #8B1F1F;
+    --danger-bg: #FAEAEA;
+    --warning: #7A4A10;
+    --warning-bg: #FDF3E3;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+
+/* Layout */
+.app { display: none; }
+.app.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* Auth screens */
+.auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+.auth-card { background: var(–surface); border: 1px solid var(–border); border-radius: 16px; padding: 2.5rem; width: 100%; max-width: 420px; box-shadow: var(–shadow); }
+.logo-mark { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; }
+.logo-icon { width: 36px; height: 36px; background: var(–accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.logo-icon svg { width: 20px; height: 20px; fill: none; stroke: white; stroke-width: 2; }
+.logo-text { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+.logo-text span { color: var(–accent); }
+.auth-title { font-size: 22px; font-weight: 600; margin-bottom: 0.25rem; letter-spacing: -0.4px; }
+.auth-sub { color: var(–text-2); font-size: 14px; margin-bottom: 2rem; }
+
+/* Forms */
+.field { margin-bottom: 1.25rem; }
+.field label { display: block; font-size: 13px; font-weight: 500; color: var(–text-2); margin-bottom: 6px; letter-spacing: 0.2px; }
+.field input, .field select, .field textarea {
+width: 100%; padding: 10px 12px; border: 1px solid var(–border);
+border-radius: var(–radius-sm); background: var(–surface);
+font-family: var(–font); font-size: 15px; color: var(–text);
+transition: border-color 0.15s, box-shadow 0.15s; outline: none;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+border-color: var(–accent); box-shadow: 0 0 0 3px rgba(26,77,143,0.1);
+}
+.field textarea { resize: vertical; min-height: 100px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+padding: 11px 20px; border-radius: var(–radius-sm); font-family: var(–font);
+font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.15s;
+border: 1px solid transparent; }
+.btn-primary { background: var(–accent); color: white; border-color: var(–accent); }
+.btn-primary:hover { background: var(–accent-hover); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-outline { background: transparent; color: var(–text); border-color: var(–border); }
+.btn-outline:hover { background: var(–surface2); }
+.btn-danger { background: var(–danger-bg); color: var(–danger); border-color: #f0b8b8; }
+.btn-full { width: 100%; }
+
+/* Alerts */
+.alert { padding: 12px 14px; border-radius: var(–radius-sm); font-size: 14px; margin-bottom: 1rem; display: none; }
+.alert.show { display: block; }
+.alert-danger { background: var(–danger-bg); color: var(–danger); border: 1px solid #f0b8b8; }
+.alert-success { background: var(–success-bg); color: var(–success); border: 1px solid #a8dbc0; }
+.alert-warning { background: var(–warning-bg); color: var(–warning); border: 1px solid #f5d69b; }
+.alert-info { background: var(–accent-light); color: var(–accent); border: 1px solid #b5d4f4; }
+
+/* OTP input */
+.otp-group { display: flex; gap: 10px; justify-content: center; margin: 1.5rem 0; }
+.otp-group input { width: 48px; height: 56px; text-align: center; font-size: 22px;
+font-family: var(–mono); font-weight: 500; border: 1.5px solid var(–border);
+border-radius: var(–radius-sm); background: var(–surface); color: var(–text); }
+.otp-group input:focus { border-color: var(–accent); box-shadow: 0 0 0 3px rgba(26,77,143,0.1); outline: none; }
+
+/* Navbar */
+.navbar { background: var(–surface); border-bottom: 1px solid var(–border); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; }
+.nav-left { display: flex; align-items: center; gap: 2rem; }
+.nav-tabs { display: flex; gap: 4px; }
+.nav-tab { padding: 6px 14px; border-radius: var(–radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; color: var(–text-2); border: none; background: none; font-family: var(–font); transition: all 0.15s; }
+.nav-tab:hover { background: var(–surface2); color: var(–text); }
+.nav-tab.active { background: var(–accent-light); color: var(–accent); }
+.nav-right { display: flex; align-items: center; gap: 1rem; }
+.nav-user { font-size: 13px; color: var(–text-2); }
+.nav-badge { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.badge-optiker { background: var(–accent-light); color: var(–accent); }
+.badge-admin { background: #EEF0FE; color: #3B4CC0; }
+
+/* Main content */
+.main { flex: 1; padding: 2rem; max-width: 960px; margin: 0 auto; width: 100%; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* Page headers */
+.page-header { margin-bottom: 2rem; }
+.page-title { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 4px; }
+.page-sub { color: var(–text-2); font-size: 14px; }
+
+/* Upload form */
+.form-card { background: var(–surface); border: 1px solid var(–border); border-radius: var(–radius); padding: 1.75rem; margin-bottom: 1.5rem; box-shadow: var(–shadow); }
+.form-section-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(–text-3); margin-bottom: 1.25rem; }
+.file-drop { border: 1.5px dashed var(–border-strong); border-radius: var(–radius-sm); padding: 2rem; text-align: center; cursor: pointer; transition: all 0.15s; background: var(–bg); }
+.file-drop:hover, .file-drop.dragover { border-color: var(–accent); background: var(–accent-light); }
+.file-drop-icon { font-size: 28px; margin-bottom: 0.5rem; }
+.file-drop-text { font-size: 14px; color: var(–text-2); }
+.file-drop-hint { font-size: 12px; color: var(–text-3); margin-top: 4px; }
+.file-list { margin-top: 1rem; display: flex; flex-direction: column; gap: 8px; }
+.file-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(–surface2); border-radius: var(–radius-sm); font-size: 13px; }
+.file-item-name { font-family: var(–mono); color: var(–text); }
+.file-item-size { color: var(–text-3); }
+.file-remove { background: none; border: none; cursor: pointer; color: var(–text-3); font-size: 16px; padding: 0 4px; }
+.file-remove:hover { color: var(–danger); }
+
+/* Consent block */
+.consent-block { background: var(–warning-bg); border: 1px solid #f5d69b; border-radius: var(–radius-sm); padding: 1.25rem; margin-top: 1rem; }
+.consent-block p { font-size: 13px; color: var(–warning); line-height: 1.6; margin-bottom: 1rem; }
+.consent-check { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(–text); cursor: pointer; }
+.consent-check input[type=checkbox] { margin-top: 2px; width: 16px; height: 16px; cursor: pointer; accent-color: var(–accent); }
+
+/* Admin dashboard */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.stat-card { background: var(–surface); border: 1px solid var(–border); border-radius: var(–radius); padding: 1.25rem; box-shadow: var(–shadow); }
+.stat-label { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; color: var(–text-3); margin-bottom: 8px; }
+.stat-value { font-size: 28px; font-weight: 600; letter-spacing: -0.5px; }
+.stat-sub { font-size: 12px; color: var(–text-3); margin-top: 2px; }
+
+/* Table */
+.table-wrap { background: var(–surface); border: 1px solid var(–border); border-radius: var(–radius); overflow: hidden; box-shadow: var(–shadow); }
+.table-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(–border); display: flex; align-items: center; justify-content: space-between; }
+.table-title { font-size: 14px; font-weight: 600; }
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 12px; font-weight: 500; color: var(–text-3); text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 1.25rem; border-bottom: 1px solid var(–border); text-align: left; background: var(–bg); }
+td { padding: 12px 1.25rem; font-size: 14px; border-bottom: 1px solid var(–border); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(–surface2); }
+.status-badge { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; display: inline-block; }
+.status-new { background: #EAF1FB; color: #1A4D8F; }
+.status-reviewed { background: var(–success-bg); color: var(–success); }
+.status-pending { background: var(–warning-bg); color: var(–warning); }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(–surface); border-radius: 14px; padding: 2rem; max-width: 560px; width: 100%; max-height: 85vh; overflow-y: auto; }
+.modal-title { font-size: 18px; font-weight: 600; margin-bottom: 1.5rem; letter-spacing: -0.3px; }
+.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.5rem; }
+.detail-row { display: flex; padding: 10px 0; border-bottom: 1px solid var(–border); font-size: 14px; }
+.detail-label { color: var(–text-2); width: 160px; flex-shrink: 0; font-size: 13px; }
+.detail-value { color: var(–text); }
+
+/* GDPR / Legal info panel */
+.legal-panel { background: var(–surface); border: 1px solid var(–border); border-radius: var(–radius); padding: 1.75rem; box-shadow: var(–shadow); }
+.legal-item { display: flex; gap: 14px; padding: 1rem 0; border-bottom: 1px solid var(–border); }
+.legal-item:last-child { border-bottom: none; }
+.legal-icon { width: 36px; height: 36px; border-radius: 8px; background: var(–accent-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.legal-icon svg { width: 18px; height: 18px; fill: none; stroke: var(–accent); stroke-width: 2; }
+.legal-title { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+.legal-desc { font-size: 13px; color: var(–text-2); line-height: 1.5; }
+
+/* Audit log */
+.audit-entry { padding: 10px 0; border-bottom: 1px solid var(–border); display: flex; gap: 1rem; align-items: flex-start; }
+.audit-entry:last-child { border-bottom: none; }
+.audit-time { font-family: var(–mono); font-size: 12px; color: var(–text-3); white-space: nowrap; }
+.audit-msg { font-size: 13px; color: var(–text); }
+.audit-user { font-size: 12px; color: var(–accent); }
+
+/* Loading spinner */
+.spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner-dark { border-color: rgba(26,77,143,0.2); border-top-color: var(–accent); }
+
+/* Footer */
+.footer { padding: 1.25rem 2rem; border-top: 1px solid var(–border); background: var(–surface); font-size: 12px; color: var(–text-3); display: flex; justify-content: space-between; align-items: center; }
+
+/* Config panel */
+.config-panel { background: var(–danger-bg); border: 1px solid #f0b8b8; border-radius: var(–radius); padding: 1.5rem; margin-bottom: 2rem; }
+.config-panel h3 { color: var(–danger); font-size: 15px; margin-bottom: 1rem; }
+.config-field { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+.config-field label { font-size: 13px; color: var(–danger); width: 160px; }
+.config-field input { flex: 1; padding: 8px 10px; border: 1px solid #f0b8b8; border-radius: var(–radius-sm); font-family: var(–mono); font-size: 12px; background: white; }
+.demo-note { font-size: 12px; color: var(–danger); margin-top: 8px; }
+
+@media (max-width: 600px) {
+.field-row { grid-template-columns: 1fr; }
+.navbar { padding: 0 1rem; }
+.main { padding: 1.25rem; }
+.stats-grid { grid-template-columns: 1fr 1fr; }
+.nav-tabs { display: none; }
+}
+
+.sep { height: 1px; background: var(–border); margin: 0.5rem 0 1.25rem; }
+.link-btn { background: none; border: none; color: var(–accent); font-family: var(–font); font-size: 14px; cursor: pointer; padding: 0; text-decoration: underline; }
+.text-muted { color: var(–text-2); font-size: 13px; }
+.mt-1 { margin-top: 0.5rem; }
+.mb-1 { margin-bottom: 0.75rem; }
+.flex { display: flex; }
+.gap-2 { gap: 0.5rem; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+</style>
+
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     CONFIG (demo only — in production use env variables)
+════════════════════════════════════════════════════════ -->
+
+<div id="setupScreen" class="auth-wrap">
+  <div class="auth-card">
+    <div class="logo-mark">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12"/></svg>
+      </div>
+      <div class="logo-text">Opti<span>Vision</span></div>
+    </div>
+    <div class="auth-title">Konfigurera Supabase</div>
+    <p class="auth-sub">Ange dina Supabase-uppgifter för att starta demon. I produktion används miljövariabler.</p>
+
+```
+<div class="config-panel" style="background:var(--accent-light);border-color:#b5d4f4;">
+  <h3 style="color:var(--accent);">Supabase-anslutning</h3>
+  <div class="field">
+    <label>Project URL</label>
+    <input type="text" id="sbUrl" placeholder="https://xxxx.supabase.co" />
+  </div>
+  <div class="field">
+    <label>Anon Key</label>
+    <input type="password" id="sbKey" placeholder="eyJ..." />
+  </div>
+  <p class="demo-note" style="color:var(--text-2);">Hittas i Supabase → Project Settings → API</p>
+</div>
+
+<div id="setupAlert" class="alert"></div>
+<button class="btn btn-primary btn-full" onclick="initSupabase()">
+  Anslut och starta
+</button>
+
+<div class="sep"></div>
+<p class="text-muted" style="text-align:center;">Saknar Supabase? <button class="link-btn" onclick="runDemo()">Kör lokal demo</button></p>
+```
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     LOGIN
+════════════════════════════════════════════════════════ -->
+
+<div id="loginScreen" class="auth-wrap" style="display:none">
+  <div class="auth-card">
+    <div class="logo-mark">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12"/></svg>
+      </div>
+      <div class="logo-text">Opti<span>Vision</span></div>
+    </div>
+    <div class="auth-title">Logga in</div>
+    <p class="auth-sub">Säker inloggning med tvåfaktorsautentisering enligt PDL och GDPR.</p>
+
+```
+<div id="loginAlert" class="alert"></div>
+
+<div class="field">
+  <label>E-postadress</label>
+  <input type="email" id="loginEmail" placeholder="namn@klinik.se" autocomplete="email" />
+</div>
+<div class="field">
+  <label>Lösenord</label>
+  <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+</div>
+<button class="btn btn-primary btn-full" id="loginBtn" onclick="handleLogin()">
+  Fortsätt
+</button>
+<div class="sep"></div>
+<p class="text-muted" style="text-align:center;font-size:12px;">
+  Krypterad anslutning (TLS 1.3) · Data lagras i Sverige/EU<br>
+  Behandling enligt PDL (2008:355), GDPR (2016/679) och HIPAA
+</p>
+```
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     2FA OTP
+════════════════════════════════════════════════════════ -->
+
+<div id="otpScreen" class="auth-wrap" style="display:none">
+  <div class="auth-card">
+    <div class="logo-mark">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12"/></svg>
+      </div>
+      <div class="logo-text">Opti<span>Vision</span></div>
+    </div>
+    <div class="auth-title">Verifiera din identitet</div>
+    <p class="auth-sub" id="otpInfo">En sexsiffrig kod har skickats till din e-postadress.</p>
+
+```
+<div id="otpAlert" class="alert"></div>
+
+<div class="otp-group" id="otpInputs">
+  <input type="text" maxlength="1" class="otp-in" inputmode="numeric" />
+  <input type="text" maxlength="1" class="otp-in" inputmode="numeric" />
+  <input type="text" maxlength="1" class="otp-in" inputmode="numeric" />
+  <input type="text" maxlength="1" class="otp-in" inputmode="numeric" />
+  <input type="text" maxlength="1" class="otp-in" inputmode="numeric" />
+  <input type="text" maxlength="1" class="otp-in" inputmode="numeric" />
+</div>
+
+<button class="btn btn-primary btn-full" id="otpBtn" onclick="handleOtp()">
+  Verifiera och logga in
+</button>
+<p class="text-muted mt-1" style="text-align:center;">
+  Ingen kod? <button class="link-btn" onclick="resendOtp()">Skicka igen</button>
+</p>
+<p class="text-muted mt-1" style="text-align:center;">
+  <button class="link-btn" onclick="showScreen('loginScreen')">← Tillbaka</button>
+</p>
+```
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN APP
+════════════════════════════════════════════════════════ -->
+
+<div id="mainApp" class="app">
+  <nav class="navbar">
+    <div class="nav-left">
+      <div class="logo-mark" style="margin:0">
+        <div class="logo-icon" style="width:28px;height:28px">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12"/></svg>
+        </div>
+        <div class="logo-text" style="font-size:15px">Opti<span>Vision</span></div>
+      </div>
+      <div class="nav-tabs" id="navTabs">
+        <button class="nav-tab active" data-page="uploadPage" onclick="switchPage(this)">Ny remiss</button>
+        <button class="nav-tab" data-page="historyPage" onclick="switchPage(this)">Historik</button>
+        <button class="nav-tab admin-only" data-page="adminPage" onclick="switchPage(this)" style="display:none">Administration</button>
+        <button class="nav-tab" data-page="legalPage" onclick="switchPage(this)">Juridik & GDPR</button>
+      </div>
+    </div>
+    <div class="nav-right">
+      <span class="nav-badge" id="roleBadge">Optiker</span>
+      <span class="nav-user" id="navUser">Laddar...</span>
+      <button class="btn btn-outline" style="padding:6px 14px;font-size:13px" onclick="handleLogout()">Logga ut</button>
+    </div>
+  </nav>
+
+  <main class="main">
+
+```
+<!-- ── UPLOAD PAGE ── -->
+<div id="uploadPage" class="page active">
+  <div class="page-header">
+    <div class="page-title">Ny patientremiss</div>
+    <div class="page-sub">Alla fält med * är obligatoriska. Data krypteras med AES-256 vid överföring och lagring.</div>
+  </div>
+
+  <div id="uploadAlert" class="alert"></div>
+
+  <!-- Patientuppgifter -->
+  <div class="form-card">
+    <div class="form-section-title">Patientuppgifter</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Förnamn *</label>
+        <input type="text" id="patFirstName" placeholder="Anna" />
+      </div>
+      <div class="field">
+        <label>Efternamn *</label>
+        <input type="text" id="patLastName" placeholder="Lindström" />
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Personnummer * (ÅÅMMDD-XXXX)</label>
+        <input type="text" id="patSSN" placeholder="700101-1234" maxlength="13" />
+      </div>
+      <div class="field">
+        <label>Telefon</label>
+        <input type="tel" id="patPhone" placeholder="070-123 45 67" />
+      </div>
+    </div>
+    <div class="field">
+      <label>E-post patient</label>
+      <input type="email" id="patEmail" placeholder="patient@email.se" />
+    </div>
+  </div>
+
+  <!-- Klinisk information -->
+  <div class="form-card">
+    <div class="form-section-title">Klinisk information</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Undersökningsdatum *</label>
+        <input type="date" id="examDate" />
+      </div>
+      <div class="field">
+        <label>Remitterande optiker *</label>
+        <input type="text" id="referringOptician" placeholder="Namn på optiker" />
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Ögontryck höger (mmHg)</label>
+        <input type="number" id="iopRight" placeholder="16" min="0" max="60" step="0.5" />
+      </div>
+      <div class="field">
+        <label>Ögontryck vänster (mmHg)</label>
+        <input type="number" id="iopLeft" placeholder="15" min="0" max="60" step="0.5" />
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Synskärpa höger</label>
+        <input type="text" id="vaRight" placeholder="1.0 / 6/6" />
+      </div>
+      <div class="field">
+        <label>Synskärpa vänster</label>
+        <input type="text" id="vaLeft" placeholder="0.8 / 6/7.5" />
+      </div>
+    </div>
+    <div class="field">
+      <label>Prioritet</label>
+      <select id="priority">
+        <option value="routine">Rutinremiss (veckor)</option>
+        <option value="urgent">Brådskande (dagar)</option>
+        <option value="emergency">Akut (samma dag)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Anamnes / Remissorsak *</label>
+      <textarea id="anamnesis" placeholder="Beskriv symtom, fyndbeskrivning, misstanke om diagnos och remissorsak..."></textarea>
+    </div>
+  </div>
+
+  <!-- Filer -->
+  <div class="form-card">
+    <div class="form-section-title">Bilagor</div>
+
+    <div class="field">
+      <label>DICOM-filer</label>
+      <div class="file-drop" id="dicomDrop" onclick="document.getElementById('dicomInput').click()" ondragover="handleDragOver(event)" ondrop="handleDrop(event,'dicom')">
+        <div class="file-drop-icon">🏥</div>
+        <div class="file-drop-text">Klicka eller dra DICOM-filer hit</div>
+        <div class="file-drop-hint">.dcm · Max 500 MB per fil</div>
+      </div>
+      <input type="file" id="dicomInput" accept=".dcm,.dicom,application/dicom" multiple style="display:none" onchange="addFiles(this.files,'dicom')">
+      <div class="file-list" id="dicomList"></div>
+    </div>
+
+    <div class="field">
+      <label>PDF-dokument (intyg, fotografier, tidigare journaler)</label>
+      <div class="file-drop" onclick="document.getElementById('pdfInput').click()" ondragover="handleDragOver(event)" ondrop="handleDrop(event,'pdf')">
+        <div class="file-drop-icon">📄</div>
+        <div class="file-drop-text">Klicka eller dra PDF-filer hit</div>
+        <div class="file-drop-hint">.pdf · Max 50 MB per fil</div>
+      </div>
+      <input type="file" id="pdfInput" accept=".pdf,application/pdf" multiple style="display:none" onchange="addFiles(this.files,'pdf')">
+      <div class="file-list" id="pdfList"></div>
+    </div>
+  </div>
+
+  <!-- Samtycke -->
+  <div class="form-card">
+    <div class="form-section-title">Samtycke och dataskydd</div>
+    <div class="consent-block">
+      <p>Denna tjänst behandlar känsliga personuppgifter (hälsodata) i enlighet med <strong>GDPR artikel 9</strong> och <strong>Patientdatalagen (PDL) 2008:355</strong>. Uppgifterna skickas krypterat och lagras på servrar inom EU. Ögonkliniken är personuppgiftsansvarig. Data raderas automatiskt efter 10 år i enlighet med journallagen.</p>
+      <label class="consent-check">
+        <input type="checkbox" id="consentPatient" />
+        Patienten har informerats om att dennes uppgifter överförs till ögonkliniken för remisshantering och har lämnat muntligt samtycke (eller remissen är medicinskt nödvändig enl. PDL 2 kap 4 §).
+      </label>
+      <div class="mt-1">
+        <label class="consent-check">
+          <input type="checkbox" id="consentOptician" />
+          Jag intygar att jag är behörig legitimerad optiker, att uppgifterna är korrekta och att avsändandet sker i tjänsten.
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:1.5rem;">
+    <button class="btn btn-outline" onclick="clearForm()">Rensa formulär</button>
+    <button class="btn btn-primary" id="submitBtn" onclick="handleSubmit()">
+      Skicka remiss säkert →
+    </button>
+  </div>
+</div>
+
+<!-- ── HISTORY PAGE ── -->
+<div id="historyPage" class="page">
+  <div class="page-header">
+    <div class="page-title">Skickade remisser</div>
+    <div class="page-sub">Dina remisser de senaste 90 dagarna. Klicka för att se detaljer.</div>
+  </div>
+  <div class="table-wrap">
+    <div class="table-header">
+      <div class="table-title">Remisshistorik</div>
+      <button class="btn btn-outline" style="font-size:13px;padding:6px 14px;" onclick="loadHistory()">↻ Uppdatera</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Patient</th>
+          <th>Personnummer</th>
+          <th>Datum</th>
+          <th>Prioritet</th>
+          <th>Status</th>
+          <th>Åtgärd</th>
+        </tr>
+      </thead>
+      <tbody id="historyBody">
+        <tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:2rem;">Laddar remisser...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── ADMIN PAGE ── -->
+<div id="adminPage" class="page">
+  <div class="page-header">
+    <div class="page-title">Administration</div>
+    <div class="page-sub">Inkomna remisser, användarhantering och granskningslogg.</div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Totalt inkomna</div>
+      <div class="stat-value" id="statTotal">—</div>
+      <div class="stat-sub">Alla remisser</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Nya</div>
+      <div class="stat-value" id="statNew" style="color:var(--accent)">—</div>
+      <div class="stat-sub">Ohanterade</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Brådskande</div>
+      <div class="stat-value" id="statUrgent" style="color:var(--warning)">—</div>
+      <div class="stat-sub">Denna vecka</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Granskade</div>
+      <div class="stat-value" id="statDone" style="color:var(--success)">—</div>
+      <div class="stat-sub">Denna månad</div>
+    </div>
+  </div>
+
+  <div class="table-wrap" style="margin-bottom:2rem;">
+    <div class="table-header">
+      <div class="table-title">Alla inkomna remisser</div>
+      <button class="btn btn-outline" style="font-size:13px;padding:6px 14px;" onclick="loadAdminData()">↻ Uppdatera</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Patient</th>
+          <th>Optiker</th>
+          <th>Datum</th>
+          <th>IOP H/V</th>
+          <th>Prioritet</th>
+          <th>Status</th>
+          <th>Åtgärd</th>
+        </tr>
+      </thead>
+      <tbody id="adminBody">
+        <tr><td colspan="7" style="text-align:center;color:var(--text-3);padding:2rem;">Laddar...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Audit log -->
+  <div class="form-card">
+    <div class="form-section-title">Granskningslogg (audit log)</div>
+    <div id="auditLog">
+      <p class="text-muted">Laddar logg...</p>
+    </div>
+  </div>
+
+  <!-- User management -->
+  <div class="form-card" style="margin-top:1.5rem;">
+    <div class="form-section-title">Bjud in ny optiker</div>
+    <div class="flex gap-2 items-center">
+      <div class="field" style="flex:1;margin:0">
+        <input type="email" id="inviteEmail" placeholder="optiker@klinik.se" />
+      </div>
+      <button class="btn btn-primary" onclick="inviteUser()">Skicka inbjudan</button>
+    </div>
+    <p class="text-muted mt-1">Optikern får ett e-postmeddelande med instruktioner för att skapa konto med 2FA.</p>
+  </div>
+</div>
+
+<!-- ── LEGAL PAGE ── -->
+<div id="legalPage" class="page">
+  <div class="page-header">
+    <div class="page-title">Juridik & Dataskydd</div>
+    <div class="page-sub">Information om hur OptiVision uppfyller svenska och europeiska lagkrav.</div>
+  </div>
+  <div class="legal-panel">
+    <div class="legal-item">
+      <div class="legal-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div>
+        <div class="legal-title">GDPR (EU 2016/679)</div>
+        <div class="legal-desc">Hälsodata klassas som känsliga personuppgifter (Art. 9). Behandling kräver uttryckligt samtycke eller medicinsk nödvändighet. Rätt till tillgång, rättelse och radering säkerställs. Dataskyddsombud (DPO) finns utsett.</div>
+      </div>
+    </div>
+    <div class="legal-item">
+      <div class="legal-icon">
+        <svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      </div>
+      <div>
+        <div class="legal-title">Patientdatalagen (PDL 2008:355)</div>
+        <div class="legal-desc">Journaldata hanteras i enlighet med PDL. Behörighetsstyrning enligt 4 kap PDL. Patientens informationssäkerhet och integritet värnas. All åtkomst loggas i granskningslogg (audit log) i enlighet med 5 kap 6 § PDL.</div>
+      </div>
+    </div>
+    <div class="legal-item">
+      <div class="legal-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      </div>
+      <div>
+        <div class="legal-title">Kryptering och säkerhet</div>
+        <div class="legal-desc">All data krypteras med AES-256 i vila och TLS 1.3 vid överföring. Lösenord hashas med bcrypt. Tvåfaktorsautentisering (2FA) via e-post OTP är obligatorisk. Sessioner är tidsbegränsade till 8 timmar.</div>
+      </div>
+    </div>
+    <div class="legal-item">
+      <div class="legal-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      </div>
+      <div>
+        <div class="legal-title">Gallring och lagring</div>
+        <div class="legal-desc">Patientdata lagras på servrar inom EU (Sverige). Journaldata bevaras i 10 år enligt Hälso- och sjukvårdslagen (HSL 2017:30). DICOM-filer och bilagor gallras automatiskt efter lagstadgad tid. Backup med geo-redundans inom EU.</div>
+      </div>
+    </div>
+    <div class="legal-item">
+      <div class="legal-icon">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      </div>
+      <div>
+        <div class="legal-title">Behörighet och roller</div>
+        <div class="legal-desc">Rollbaserad åtkomstkontroll (RBAC): Optiker kan enbart se egna remisser. Ögonklinikens personal har läsrättigheter till alla remisser. Administratörer hanterar användare och granskningsloggar. Åtkomst kräver alltid giltig 2FA-session.</div>
+      </div>
+    </div>
+    <div class="legal-item">
+      <div class="legal-icon">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.005 1.22 2 2 0 012 .005h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+      </div>
+      <div>
+        <div class="legal-title">Kontakt och dataskyddsombud</div>
+        <div class="legal-desc">Vid frågor om personuppgiftsbehandling, kontakta dataskyddsombudet på <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5f3b2f301f302f2b3629362c363031712c3a">[email&#160;protected]</a>. Tillsynsmyndighet är Integritetsskyddsmyndigheten (IMY), imy.se, tel 08-657 61 00. Anmälan av personuppgiftsincident ska ske inom 72 timmar.</div>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+  </main>
+
+  <footer class="footer">
+    <span>OptiVision Portal v1.0 · GDPR-kompatibel · PDL 2008:355 · Data lagras inom EU</span>
+    <span id="sessionInfo">Session aktiv</span>
+  </footer>
+</div>
+
+<!-- Detail Modal -->
+
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-title">Remissdetaljer</div>
+    <div id="modalContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="modalStatusBtn" onclick="updateStatus()">Markera granskad</button>
+      <button class="btn btn-primary" onclick="closeModal()">Stäng</button>
+    </div>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let supabase = null;
+let currentUser = null;
+let currentRole = ‘optician’;
+let demoMode = false;
+let pendingEmail = ‘’;
+let selectedReferral = null;
+let files = { dicom: [], pdf: [] };
+let demoReferrals = [];
+
+// ══════════════════════════════════════════
+// SUPABASE / DEMO INIT
+// ══════════════════════════════════════════
+function initSupabase() {
+const url = document.getElementById(‘sbUrl’).value.trim();
+const key = document.getElementById(‘sbKey’).value.trim();
+const alert = document.getElementById(‘setupAlert’);
+
+if (!url || !key) {
+showAlert(alert, ‘Ange både URL och API-nyckel.’, ‘danger’);
+return;
+}
+if (!window.supabase || !window.supabase.createClient) {
+showAlert(alert, ‘Supabase-biblioteket kunde inte laddas. Använd “Kör lokal demo” istället, eller kontrollera att supabase.js finns i samma mapp.’, ‘danger’);
+return;
+}
+try {
+supabase = window.supabase.createClient(url, key);
+demoMode = false;
+showScreen(‘loginScreen’);
+} catch(e) {
+showAlert(alert, ’Ogiltig konfiguration: ’ + e.message, ‘danger’);
+}
+}
+
+function runDemo() {
+demoMode = true;
+currentUser = { email: ‘demo.optiker@optikvision.se’, id: ‘demo-1’ };
+currentRole = ‘optician’;
+seedDemoData();
+enterApp();
+}
+
+function seedDemoData() {
+demoReferrals = [
+{ id: ‘d1’, patient_first: ‘Britta’, patient_last: ‘Andersson’, ssn: ‘520304-7890’, exam_date: ‘2025-03-28’, optician: ‘Erik Lindgren’, iop_right: 22, iop_left: 20, priority: ‘urgent’, status: ‘new’, anamnesis: ‘Förhöjt ögontryck bilateralt. Misstänkt glaukom. Synfältsdefekter vänster öga.’, files_count: 2 },
+{ id: ‘d2’, patient_first: ‘Lars’, patient_last: ‘Svensson’, ssn: ‘680612-3421’, exam_date: ‘2025-03-25’, optician: ‘Erik Lindgren’, iop_right: 16, iop_left: 15, priority: ‘routine’, status: ‘reviewed’, anamnesis: ‘Rutinkontroll. Stabil myopi. Inget anmärkningsvärt.’, files_count: 1 },
+{ id: ‘d3’, patient_first: ‘Gunnel’, patient_last: ‘Persson’, ssn: ‘450901-5678’, exam_date: ‘2025-04-01’, optician: ‘Erik Lindgren’, iop_right: 18, iop_left: 17, priority: ‘routine’, status: ‘new’, anamnesis: ‘Nyupptäckt katarakt höger öga. Patientens syn försämrats märkbart senaste 6 månader.’, files_count: 3 },
+];
+}
+
+// ══════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════
+async function handleLogin() {
+const email = document.getElementById(‘loginEmail’).value.trim();
+const password = document.getElementById(‘loginPassword’).value;
+const alert = document.getElementById(‘loginAlert’);
+const btn = document.getElementById(‘loginBtn’);
+
+if (!email || !password) { showAlert(alert, ‘Fyll i e-post och lösenord.’, ‘danger’); return; }
+
+btn.innerHTML = ‘<div class="spinner"></div>’;
+btn.disabled = true;
+
+if (demoMode || !supabase) {
+pendingEmail = email;
+setTimeout(() => {
+btn.innerHTML = ‘Fortsätt’; btn.disabled = false;
+document.getElementById(‘otpInfo’).textContent = `En 6-siffrig kod har skickats till ${email} (DEMO: använd 123456)`;
+showScreen(‘otpScreen’);
+}, 800);
+return;
+}
+
+try {
+const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+if (error) throw error;
+pendingEmail = email;
+const { error: otpError } = await supabase.auth.signInWithOtp({ email });
+if (otpError) throw otpError;
+document.getElementById(‘otpInfo’).textContent = `En 6-siffrig kod har skickats till ${email}`;
+showScreen(‘otpScreen’);
+} catch(e) {
+showAlert(alert, ’Inloggning misslyckades: ’ + e.message, ‘danger’);
+} finally {
+btn.innerHTML = ‘Fortsätt’; btn.disabled = false;
+}
+}
+
+async function handleOtp() {
+const inputs = document.querySelectorAll(’.otp-in’);
+const token = Array.from(inputs).map(i => i.value).join(’’);
+const alert = document.getElementById(‘otpAlert’);
+const btn = document.getElementById(‘otpBtn’);
+
+if (token.length !== 6) { showAlert(alert, ‘Ange alla 6 siffror.’, ‘danger’); return; }
+
+btn.innerHTML = ‘<div class="spinner"></div>’; btn.disabled = true;
+
+if (demoMode || !supabase) {
+setTimeout(() => {
+btn.innerHTML = ‘Verifiera och logga in’; btn.disabled = false;
+if (token === ‘123456’) {
+currentUser = { email: pendingEmail, id: ‘demo-1’ };
+currentRole = pendingEmail.includes(‘admin’) ? ‘admin’ : ‘optician’;
+seedDemoData();
+enterApp();
+} else {
+showAlert(alert, ‘Felaktig kod. (Demo: använd 123456)’, ‘danger’);
+}
+}, 600);
+return;
+}
+
+try {
+const { data, error } = await supabase.auth.verifyOtp({ email: pendingEmail, token, type: ‘email’ });
+if (error) throw error;
+currentUser = data.user;
+const { data: profile } = await supabase.from(‘profiles’).select(‘role’).eq(‘id’, currentUser.id).single();
+currentRole = profile?.role || ‘optician’;
+enterApp();
+} catch(e) {
+showAlert(alert, ’Verifiering misslyckades: ’ + e.message, ‘danger’);
+} finally {
+btn.innerHTML = ‘Verifiera och logga in’; btn.disabled = false;
+}
+}
+
+function resendOtp() {
+if (!supabase) { showAlert(document.getElementById(‘otpAlert’), ‘Demo: kod är alltid 123456’, ‘info’); return; }
+supabase.auth.signInWithOtp({ email: pendingEmail });
+showAlert(document.getElementById(‘otpAlert’), ‘En ny kod har skickats.’, ‘success’);
+}
+
+async function handleLogout() {
+if (supabase) await supabase.auth.signOut();
+currentUser = null;
+demoMode = false;
+files = { dicom: [], pdf: [] };
+showScreen(‘setupScreen’);
+document.querySelectorAll(’.otp-in’).forEach(i => i.value = ‘’);
+}
+
+function enterApp() {
+document.getElementById(‘navUser’).textContent = currentUser.email;
+const badge = document.getElementById(‘roleBadge’);
+if (currentRole === ‘admin’) {
+badge.textContent = ‘Klinikadmin’;
+badge.className = ‘nav-badge badge-admin’;
+document.querySelectorAll(’.admin-only’).forEach(el => el.style.display = ‘block’);
+} else {
+badge.textContent = ‘Optiker’;
+badge.className = ‘nav-badge badge-optiker’;
+}
+document.getElementById(‘mainApp’).classList.add(‘active’);
+showScreen(null);
+loadHistory();
+startSessionTimer();
+}
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function showScreen(id) {
+[‘setupScreen’,‘loginScreen’,‘otpScreen’].forEach(s => {
+const el = document.getElementById(s);
+if (el) el.style.display = (s === id) ? ‘flex’ : ‘none’;
+});
+}
+
+function switchPage(btn) {
+document.querySelectorAll(’.nav-tab’).forEach(t => t.classList.remove(‘active’));
+btn.classList.add(‘active’);
+document.querySelectorAll(’.page’).forEach(p => p.classList.remove(‘active’));
+document.getElementById(btn.dataset.page).classList.add(‘active’);
+if (btn.dataset.page === ‘adminPage’) loadAdminData();
+if (btn.dataset.page === ‘historyPage’) loadHistory();
+}
+
+// ══════════════════════════════════════════
+// FILE HANDLING
+// ══════════════════════════════════════════
+function addFiles(fileList, type) {
+Array.from(fileList).forEach(f => {
+files[type].push(f);
+renderFileList(type);
+});
+}
+
+function removeFile(type, idx) {
+files[type].splice(idx, 1);
+renderFileList(type);
+}
+
+function renderFileList(type) {
+const list = document.getElementById(type + ‘List’);
+list.innerHTML = files[type].map((f, i) => `<div class="file-item"> <span class="file-item-name">${f.name}</span> <span class="file-item-size">${(f.size/1024/1024).toFixed(1)} MB</span> <button class="file-remove" onclick="removeFile('${type}',${i})">✕</button> </div>`).join(’’);
+}
+
+function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add(‘dragover’); }
+function handleDrop(e, type) {
+e.preventDefault(); e.currentTarget.classList.remove(‘dragover’);
+addFiles(e.dataTransfer.files, type);
+}
+
+// ══════════════════════════════════════════
+// SUBMIT
+// ══════════════════════════════════════════
+async function handleSubmit() {
+const alert = document.getElementById(‘uploadAlert’);
+const btn = document.getElementById(‘submitBtn’);
+
+const firstName = document.getElementById(‘patFirstName’).value.trim();
+const lastName = document.getElementById(‘patLastName’).value.trim();
+const ssn = document.getElementById(‘patSSN’).value.trim();
+const examDate = document.getElementById(‘examDate’).value;
+const optician = document.getElementById(‘referringOptician’).value.trim();
+const anamnesis = document.getElementById(‘anamnesis’).value.trim();
+const consent1 = document.getElementById(‘consentPatient’).checked;
+const consent2 = document.getElementById(‘consentOptician’).checked;
+
+if (!firstName || !lastName || !ssn || !examDate || !optician || !anamnesis) {
+showAlert(alert, ‘Fyll i alla obligatoriska fält (markerade med *).’, ‘danger’); return;
+}
+if (!validateSSN(ssn)) {
+showAlert(alert, ‘Ogiltigt personnummer. Använd formatet ÅÅMMDD-XXXX.’, ‘danger’); return;
+}
+if (!consent1 || !consent2) {
+showAlert(alert, ‘Du måste bekräfta båda samtyckena för att skicka remissen.’, ‘danger’); return;
+}
+
+btn.innerHTML = ‘<div class="spinner"></div> Krypterar och sänder…’; btn.disabled = true;
+
+const payload = {
+patient_first: firstName, patient_last: lastName, ssn,
+patient_phone: document.getElementById(‘patPhone’).value,
+patient_email: document.getElementById(‘patEmail’).value,
+exam_date: examDate, optician,
+iop_right: parseFloat(document.getElementById(‘iopRight’).value) || null,
+iop_left: parseFloat(document.getElementById(‘iopLeft’).value) || null,
+va_right: document.getElementById(‘vaRight’).value,
+va_left: document.getElementById(‘vaLeft’).value,
+priority: document.getElementById(‘priority’).value,
+anamnesis,
+status: ‘new’,
+sent_by: currentUser?.id,
+sent_by_email: currentUser?.email,
+};
+
+if (demoMode || !supabase) {
+setTimeout(() => {
+const newRef = { …payload, id: ‘d’ + Date.now(), files_count: files.dicom.length + files.pdf.length };
+demoReferrals.unshift(newRef);
+btn.innerHTML = ‘Skicka remiss säkert →’; btn.disabled = false;
+showAlert(alert, ‘✓ Remissen har skickats säkert och krypterats. Referensnummer: REF-’ + Math.floor(Math.random()*90000+10000), ‘success’);
+addAuditEntry(‘Remiss skickad’, currentUser.email, `Patient: ${firstName} ${lastName}`);
+clearForm();
+}, 1200);
+return;
+}
+
+try {
+const { data: ref, error } = await supabase.from(‘referrals’).insert([payload]).select().single();
+if (error) throw error;
+
+```
+for (const f of files.dicom) {
+  await supabase.storage.from('dicom-files').upload(`${ref.id}/${f.name}`, f);
+}
+for (const f of files.pdf) {
+  await supabase.storage.from('pdf-files').upload(`${ref.id}/${f.name}`, f);
+}
+await supabase.from('audit_log').insert([{ action: 'referral_created', user_id: currentUser.id, referral_id: ref.id, details: `Patient: ${firstName} ${lastName}` }]);
+
+showAlert(alert, `✓ Remissen har skickats säkert. Referensnummer: ${ref.id.substring(0,8).toUpperCase()}`, 'success');
+clearForm();
+```
+
+} catch(e) {
+showAlert(alert, ’Fel vid sändning: ’ + e.message, ‘danger’);
+} finally {
+btn.innerHTML = ‘Skicka remiss säkert →’; btn.disabled = false;
+}
+}
+
+function clearForm() {
+[‘patFirstName’,‘patLastName’,‘patSSN’,‘patPhone’,‘patEmail’,‘examDate’,‘referringOptician’,‘iopRight’,‘iopLeft’,‘vaRight’,‘vaLeft’,‘anamnesis’].forEach(id => { document.getElementById(id).value = ‘’; });
+document.getElementById(‘priority’).value = ‘routine’;
+document.getElementById(‘consentPatient’).checked = false;
+document.getElementById(‘consentOptician’).checked = false;
+files = { dicom: [], pdf: [] };
+renderFileList(‘dicom’); renderFileList(‘pdf’);
+}
+
+// ══════════════════════════════════════════
+// HISTORY
+// ══════════════════════════════════════════
+async function loadHistory() {
+const tbody = document.getElementById(‘historyBody’);
+let refs = [];
+
+if (demoMode || !supabase) {
+refs = demoReferrals.filter(r => r.sent_by === ‘demo-1’ || currentRole === ‘optician’);
+} else {
+const { data } = await supabase.from(‘referrals’).select(’*’).eq(‘sent_by’, currentUser.id).order(‘created_at’, { ascending: false }).limit(50);
+refs = data || [];
+}
+
+tbody.innerHTML = refs.length ? refs.map(r => `<tr> <td><strong>${r.patient_first} ${r.patient_last}</strong></td> <td style="font-family:var(--mono);font-size:13px">${r.ssn}</td> <td>${r.exam_date}</td> <td>${priorityLabel(r.priority)}</td> <td>${statusBadge(r.status)}</td> <td><button class="btn btn-outline" style="font-size:12px;padding:4px 10px;" onclick="openModal('${r.id}')">Detaljer</button></td> </tr>`).join(’’) : `<tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:2rem;">Inga remisser hittades.</td></tr>`;
+}
+
+// ══════════════════════════════════════════
+// ADMIN
+// ══════════════════════════════════════════
+async function loadAdminData() {
+const tbody = document.getElementById(‘adminBody’);
+let refs = [];
+
+if (demoMode || !supabase) { refs = demoReferrals; }
+else {
+const { data } = await supabase.from(‘referrals’).select(’*’).order(‘created_at’, { ascending: false }).limit(100);
+refs = data || [];
+}
+
+const total = refs.length;
+const newCount = refs.filter(r => r.status === ‘new’).length;
+const urgent = refs.filter(r => r.priority !== ‘routine’).length;
+const done = refs.filter(r => r.status === ‘reviewed’).length;
+document.getElementById(‘statTotal’).textContent = total;
+document.getElementById(‘statNew’).textContent = newCount;
+document.getElementById(‘statUrgent’).textContent = urgent;
+document.getElementById(‘statDone’).textContent = done;
+
+tbody.innerHTML = refs.map(r => `<tr> <td><strong>${r.patient_first} ${r.patient_last}</strong></td> <td style="font-size:13px">${r.optician || r.sent_by_email || '—'}</td> <td>${r.exam_date}</td> <td style="font-family:var(--mono);font-size:13px">${r.iop_right ?? '—'}/${r.iop_left ?? '—'}</td> <td>${priorityLabel(r.priority)}</td> <td>${statusBadge(r.status)}</td> <td><button class="btn btn-outline" style="font-size:12px;padding:4px 10px;" onclick="openModal('${r.id}')">Granska</button></td> </tr>`).join(’’);
+
+renderAuditLog();
+}
+
+function renderAuditLog() {
+const log = document.getElementById(‘auditLog’);
+const entries = JSON.parse(localStorage.getItem(‘auditLog’) || ‘[]’);
+if (!entries.length) { log.innerHTML = ‘<p class="text-muted">Inga poster i loggen.</p>’; return; }
+log.innerHTML = entries.slice(-20).reverse().map(e => `<div class="audit-entry"> <span class="audit-time">${e.time}</span> <div> <div class="audit-msg">${e.action} — ${e.detail || ''}</div> <div class="audit-user">${e.user}</div> </div> </div>`).join(’’);
+}
+
+function addAuditEntry(action, user, detail) {
+const entries = JSON.parse(localStorage.getItem(‘auditLog’) || ‘[]’);
+entries.push({ time: new Date().toLocaleString(‘sv-SE’), action, user, detail });
+localStorage.setItem(‘auditLog’, JSON.stringify(entries.slice(-100)));
+}
+
+// ══════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════
+function openModal(id) {
+const ref = demoMode ? demoReferrals.find(r => r.id === id) : null;
+if (!ref && demoMode) return;
+selectedReferral = ref || { id };
+
+const html = ref ? `<div class="detail-row"><span class="detail-label">Patient</span><span class="detail-value">${ref.patient_first} ${ref.patient_last}</span></div> <div class="detail-row"><span class="detail-label">Personnummer</span><span class="detail-value" style="font-family:var(--mono)">${ref.ssn}</span></div> <div class="detail-row"><span class="detail-label">Undersökningsdatum</span><span class="detail-value">${ref.exam_date}</span></div> <div class="detail-row"><span class="detail-label">Remitterande optiker</span><span class="detail-value">${ref.optician || '—'}</span></div> <div class="detail-row"><span class="detail-label">Ögontryck H/V</span><span class="detail-value">${ref.iop_right ?? '—'} / ${ref.iop_left ?? '—'} mmHg</span></div> <div class="detail-row"><span class="detail-label">Prioritet</span><span class="detail-value">${priorityLabel(ref.priority)}</span></div> <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">${statusBadge(ref.status)}</span></div> <div class="detail-row" style="border:none"><span class="detail-label">Anamnes</span></div> <p style="font-size:14px;color:var(--text);line-height:1.7;background:var(--bg);padding:1rem;border-radius:var(--radius-sm);margin-top:4px">${ref.anamnesis}</p> ${ref.files_count ?`<p style="font-size:13px;color:var(--text-2);margin-top:1rem;">📎 ${ref.files_count} bilaga(or) bifogade (krypterade)</p>`: ''}` : ‘<p class="text-muted">Laddar…</p>’;
+
+document.getElementById(‘modalContent’).innerHTML = html;
+document.getElementById(‘detailModal’).classList.add(‘open’);
+addAuditEntry(‘Remiss visad’, currentUser.email, ref ? `Patient: ${ref.patient_first} ${ref.patient_last}` : id);
+}
+
+function closeModal() { document.getElementById(‘detailModal’).classList.remove(‘open’); }
+
+async function updateStatus() {
+if (!selectedReferral) return;
+if (demoMode) {
+const ref = demoReferrals.find(r => r.id === selectedReferral.id);
+if (ref) { ref.status = ‘reviewed’; loadAdminData(); loadHistory(); }
+} else {
+await supabase.from(‘referrals’).update({ status: ‘reviewed’ }).eq(‘id’, selectedReferral.id);
+}
+addAuditEntry(‘Remiss markerad granskad’, currentUser.email, selectedReferral.id);
+closeModal();
+}
+
+async function inviteUser() {
+const email = document.getElementById(‘inviteEmail’).value.trim();
+if (!email) return;
+if (demoMode) { alert(’Demo: Inbjudan skickad till ’ + email); document.getElementById(‘inviteEmail’).value = ‘’; return; }
+await supabase.auth.admin.inviteUserByEmail(email);
+showAlert(document.getElementById(‘uploadAlert’), `Inbjudan skickad till ${email}`, ‘success’);
+document.getElementById(‘inviteEmail’).value = ‘’;
+}
+
+// ══════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════
+function validateSSN(ssn) { return /^\d{6}-\d{4}$/.test(ssn) || /^\d{8}-\d{4}$/.test(ssn); }
+
+function statusBadge(s) {
+const map = { new: [‘status-new’, ‘Ny’], reviewed: [‘status-reviewed’, ‘Granskad’], pending: [‘status-pending’, ‘Pågående’] };
+const [cls, label] = map[s] || [‘status-pending’, s];
+return `<span class="status-badge ${cls}">${label}</span>`;
+}
+
+function priorityLabel(p) {
+const map = { routine: ‘🟢 Rutin’, urgent: ‘🟡 Brådskande’, emergency: ‘🔴 Akut’ };
+return map[p] || p;
+}
+
+function showAlert(el, msg, type) {
+el.textContent = msg;
+el.className = `alert alert-${type} show`;
+if (type === ‘success’ || type === ‘info’) setTimeout(() => el.classList.remove(‘show’), 6000);
+}
+
+function startSessionTimer() {
+let seconds = 8 * 3600;
+const info = document.getElementById(‘sessionInfo’);
+setInterval(() => {
+seconds–;
+if (seconds <= 0) { handleLogout(); return; }
+const h = Math.floor(seconds / 3600);
+const m = Math.floor((seconds % 3600) / 60);
+info.textContent = `Session: ${h}h ${m}m kvar`;
+}, 1000);
+}
+
+// OTP keyboard navigation
+window.addEventListener(‘load’, function() {
+document.querySelectorAll(’.otp-in’).forEach((input, i, all) => {
+input.addEventListener(‘input’, () => { if (input.value && i < all.length - 1) all[i+1].focus(); });
+input.addEventListener(‘keydown’, e => { if (e.key === ‘Backspace’ && !input.value && i > 0) all[i-1].focus(); });
+});
+var ed = document.getElementById(‘examDate’);
+if (ed) ed.value = new Date().toISOString().split(‘T’)[0];
+var le = document.getElementById(‘loginEmail’);
+if (le) le.value = ‘demo@optiker.se’;
+var lp = document.getElementById(‘loginPassword’);
+if (lp) lp.value = ‘demo1234’;
+showScreen(‘setupScreen’);
+});
+</script>
+
+</body>
+</html>
