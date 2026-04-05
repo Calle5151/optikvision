@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OptiVision Klinik</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F7F6F2;color:#1A1916;min-height:100vh;font-size:15px;line-height:1.6}
+.screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+.card{background:#fff;border:1px solid #E2E0D8;border-radius:16px;padding:2rem;width:100%;max-width:420px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem}
+.logo-icon{width:36px;height:36px;background:#0F6E56;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:20px;height:20px;stroke:white;fill:none;stroke-width:2}
+.logo-text{font-size:17px;font-weight:600}
+.logo-text span{color:#0F6E56}
+h2{font-size:22px;font-weight:600;margin-bottom:.25rem}
+.sub{color:#6B6860;font-size:14px;margin-bottom:1.5rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:13px;font-weight:500;color:#6B6860;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:10px 12px;border:1px solid #E2E0D8;border-radius:6px;font-size:15px;font-family:inherit;color:#1A1916;background:#fff;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#0F6E56;box-shadow:0 0 0 3px rgba(15,110,86,.1)}
+.field textarea{resize:vertical;min-height:80px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:6px;font-size:15px;font-weight:500;cursor:pointer;border:none;font-family:inherit;transition:background .15s}
+.btn-primary{background:#0F6E56;color:white}
+.btn-primary:hover{background:#085041}
+.btn-outline{background:transparent;color:#1A1916;border:1px solid #E2E0D8}
+.btn-outline:hover{background:#F0EFE9}
+.btn-sm{padding:7px 14px;font-size:13px;width:auto}
+.link-btn{background:none;border:none;color:#0F6E56;font-family:inherit;font-size:14px;cursor:pointer;text-decoration:underline;padding:0}
+.sep{height:1px;background:#E2E0D8;margin:1rem 0}
+.alert{padding:12px 14px;border-radius:6px;font-size:14px;margin-bottom:1rem;display:none}
+.alert.show{display:block}
+.alert-danger{background:#FAEAEA;color:#8B1F1F;border:1px solid #f0b8b8}
+.alert-success{background:#EBF7F0;color:#1A6B3C;border:1px solid #a8dbc0}
+.alert-info{background:#EAF1FB;color:#1A4D8F;border:1px solid #b5d4f4}
+.otp-wrap{display:flex;gap:6px;justify-content:center;margin:1.5rem 0}
+.otp-wrap input{width:40px;height:50px;text-align:center;font-size:20px;font-weight:600;border:1.5px solid #E2E0D8;border-radius:6px;font-family:monospace;color:#1A1916;background:#fff;outline:none}
+.otp-wrap input:focus{border-color:#0F6E56;box-shadow:0 0 0 3px rgba(15,110,86,.1)}
+.navbar{background:#fff;border-bottom:1px solid #E2E0D8;padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-left{display:flex;align-items:center;gap:1.5rem}
+.nav-logo{display:flex;align-items:center;gap:8px}
+.nav-logo-icon{width:28px;height:28px;background:#0F6E56;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.nav-logo-icon svg{width:15px;height:15px;stroke:white;fill:none;stroke-width:2}
+.nav-logo-text{font-size:15px;font-weight:600}
+.nav-logo-text span{color:#0F6E56}
+.nav-tabs{display:flex;gap:2px}
+.tab{padding:6px 12px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;color:#6B6860;border:none;background:none;font-family:inherit}
+.tab.active{background:#E1F5EE;color:#0F6E56}
+.nav-right{display:flex;align-items:center;gap:10px}
+.badge{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500;background:#E1F5EE;color:#0F6E56}
+.nav-email{font-size:13px;color:#6B6860}
+.main{flex:1;padding:1.5rem;max-width:1100px;margin:0 auto;width:100%}
+.page{display:none}
+.page.active{display:block}
+.page-title{font-size:22px;font-weight:600;margin-bottom:.25rem}
+.page-sub{color:#6B6860;font-size:14px;margin-bottom:1.5rem}
+.form-card{background:#fff;border:1px solid #E2E0D8;border-radius:10px;padding:1.5rem;margin-bottom:1.25rem}
+.section-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:#9E9C96;margin-bottom:1rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat{background:#fff;border:1px solid #E2E0D8;border-radius:10px;padding:1.25rem}
+.stat-label{font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.4px;color:#9E9C96;margin-bottom:6px}
+.stat-value{font-size:28px;font-weight:600}
+.table-card{background:#fff;border:1px solid #E2E0D8;border-radius:10px;overflow:hidden;margin-bottom:1.25rem}
+.table-head{padding:.875rem 1.25rem;border-bottom:1px solid #E2E0D8;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.table-head-title{font-size:14px;font-weight:600}
+.table-filters{display:flex;gap:8px;flex-wrap:wrap}
+.fi{padding:6px 10px;border:1px solid #E2E0D8;border-radius:6px;font-size:13px;font-family:inherit;background:#fff;outline:none}
+.fi:focus{border-color:#0F6E56}
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;font-weight:500;color:#9E9C96;text-transform:uppercase;letter-spacing:.4px;padding:10px 1.25rem;border-bottom:1px solid #E2E0D8;text-align:left;background:#F7F6F2}
+td{padding:12px 1.25rem;font-size:14px;border-bottom:1px solid #F0EFE9}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFAF8}
+.status{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500;display:inline-block}
+.sn{background:#EAF1FB;color:#1A4D8F}
+.sr{background:#EBF7F0;color:#1A6B3C}
+.sp{background:#FDF3E3;color:#7A4A10}
+.se{background:#FAEAEA;color:#8B1F1F}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:100;padding:1rem;pointer-events:none}
+.overlay.open{display:flex;pointer-events:all}
+.modal{background:#fff;border-radius:14px;padding:1.75rem;max-width:560px;width:100%;max-height:85vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:600;margin-bottom:1.25rem}
+.dr{display:flex;padding:8px 0;border-bottom:1px solid #F0EFE9;font-size:14px}
+.dl{color:#6B6860;width:140px;flex-shrink:0;font-size:13px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;flex-wrap:wrap}
+.bi{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #F0EFE9}
+.bi:last-child{border-bottom:none}
+.bd{background:#E1F5EE;color:#0F6E56;border-radius:8px;padding:8px 12px;text-align:center;min-width:56px;flex-shrink:0}
+.bday{font-size:22px;font-weight:600;line-height:1}
+.bmon{font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+footer{padding:1rem 1.5rem;border-top:1px solid #E2E0D8;background:#fff;font-size:12px;color:#9E9C96;display:flex;justify-content:space-between}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.ch{position:relative;height:200px}
+@media(max-width:700px){.g2{grid-template-columns:1fr}.row{grid-template-columns:1fr}.nav-tabs{display:none}.stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="screen" style="display:flex">
+  <div class="card">
+    <div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12"/></svg></div><div class="logo-text">Opti<span>Vision</span> Klinik</div></div>
+    <div id="debugBar" style="background:#EAF1FB;padding:8px;border-radius:6px;margin-bottom:1rem;font-size:13px;text-align:center">
+      JS-status: <span id="jsStatus" style="color:#8B1F1F">Inte laddad</span>
+    </div>
+    <h2>Klinikportal</h2>
+    <p class="sub">Logga in med ditt klinikkonto.</p>
+    <div id="loginAlert" class="alert"></div>
+    <div class="field"><label>E-postadress</label><input type="email" id="loginEmail" placeholder="namn@kliniken.se"></div>
+    <div class="field"><label>Lösenord</label><input type="password" id="loginPw" placeholder="••••••••"></div>
+    <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Fortsätt</button>
+    <div class="sep"></div>
+    <p style="text-align:center;font-size:14px;color:#6B6860">Ingen Supabase? <button class="link-btn" onclick="startDemo()">Kör lokal demo</button></p>
+    <div class="sep"></div>
+    <p style="text-align:center;font-size:13px;color:#9E9C96">Optiker? <a href="index.html" style="color:#0F6E56">Optikerportalen</a></p>
+  </div>
+</div>
+
+<div id="otpScreen" class="screen" style="display:none;flex-direction:column">
+  <div class="card">
+    <div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12"/></svg></div><div class="logo-text">Opti<span>Vision</span> Klinik</div></div>
+    <h2>Verifiera identitet</h2>
+    <p class="sub" id="otpSub">En 8-siffrig kod har skickats till din e-post.</p>
+    <div id="otpAlert" class="alert"></div>
+    <div class="otp-wrap">
+      <input type="tel" maxlength="1" class="otp-box">
+      <input type="tel" maxlength="1" class="otp-box">
+      <input type="tel" maxlength="1" class="otp-box">
+      <input type="tel" maxlength="1" class="otp-box">
+      <input type="tel" maxlength="1" class="otp-box">
+      <input type="tel" maxlength="1" class="otp-box">
+      <input type="tel" maxlength="1" class="otp-box">
+      <input type="tel" maxlength="1" class="otp-box">
+    </div>
+    <button class="btn btn-primary" id="otpBtn" onclick="doOtp()">Verifiera och logga in</button>
+    <p style="text-align:center;margin-top:.75rem;font-size:14px;color:#6B6860">Ingen kod? <button class="link-btn" onclick="resend()">Skicka igen</button></p>
+    <p style="text-align:center;margin-top:.5rem"><button class="link-btn" onclick="goTo('loginScreen')">Tillbaka</button></p>
+  </div>
+</div>
+
+<div id="appScreen" style="display:none;min-height:100vh;flex-direction:column">
+  <nav class="navbar">
+    <div class="nav-left">
+      <div class="nav-logo"><div class="nav-logo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12"/></svg></div><div class="nav-logo-text">Opti<span>Vision</span> Klinik</div></div>
+      <div class="nav-tabs">
+        <button class="tab active" onclick="showPage('dashPage',this)">Dashboard</button>
+        <button class="tab" onclick="showPage('refsPage',this)">Remisser</button>
+        <button class="tab" onclick="showPage('calPage',this)">Tidsbokning</button>
+        <button class="tab" onclick="showPage('rptPage',this)">Rapporter</button>
+        <button class="tab" onclick="showPage('dcmPage',this)">DICOM</button>
+      </div>
+    </div>
+    <div class="nav-right">
+      <span class="badge">Klinikpersonal</span>
+      <span class="nav-email" id="navEmail"></span>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()">Logga ut</button>
+    </div>
+  </nav>
+  <div class="main">
+
+```
+<div id="dashPage" class="page active">
+  <div class="page-title">Dashboard</div>
+  <div class="page-sub">Oversikt inkomna remisser.</div>
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Totalt</div><div class="stat-value" id="sTotal">0</div></div>
+    <div class="stat"><div class="stat-label">Nya</div><div class="stat-value" id="sNew" style="color:#1A4D8F">0</div></div>
+    <div class="stat"><div class="stat-label">Bradskande</div><div class="stat-value" id="sUrgent" style="color:#7A4A10">0</div></div>
+    <div class="stat"><div class="stat-label">Granskade</div><div class="stat-value" id="sDone" style="color:#1A6B3C">0</div></div>
+  </div>
+  <div class="g2" style="margin-bottom:1.25rem">
+    <div class="form-card" style="margin-bottom:0"><div class="section-title">Prioritet</div><div class="ch"><canvas id="cPri"></canvas></div></div>
+    <div class="form-card" style="margin-bottom:0"><div class="section-title">Status</div><div class="ch"><canvas id="cSta"></canvas></div></div>
+  </div>
+  <div class="table-card">
+    <div class="table-head"><div class="table-head-title">Senaste remisser</div></div>
+    <table><thead><tr><th>Patient</th><th>Optiker</th><th>Datum</th><th>Prioritet</th><th>Status</th></tr></thead>
+    <tbody id="dashBody"></tbody></table>
+  </div>
+</div>
+
+<div id="refsPage" class="page">
+  <div class="page-title">Remisser</div>
+  <div class="page-sub">Alla inkomna remisser.</div>
+  <div class="table-card">
+    <div class="table-head">
+      <div class="table-head-title">Alla remisser</div>
+      <div class="table-filters">
+        <select class="fi" id="fSt" onchange="filterRefs()"><option value="">Alla statusar</option><option value="new">Nya</option><option value="pending">Pagaende</option><option value="reviewed">Granskade</option></select>
+        <select class="fi" id="fPr" onchange="filterRefs()"><option value="">Alla prioriteter</option><option value="emergency">Akut</option><option value="urgent">Bradskande</option><option value="routine">Rutin</option></select>
+        <input type="text" class="fi" id="fSe" placeholder="Sok..." oninput="filterRefs()" style="width:140px">
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="loadData()">Uppdatera</button>
+    </div>
+    <table><thead><tr><th>Patient</th><th>Optiker</th><th>Datum</th><th>IOP H/V</th><th>Prioritet</th><th>Status</th><th></th></tr></thead>
+    <tbody id="refBody"></tbody></table>
+  </div>
+</div>
+
+<div id="calPage" class="page">
+  <div class="page-title">Tidsbokning</div>
+  <div class="page-sub">Boka tider for inkomna remisser.</div>
+  <div class="form-card">
+    <div class="section-title">Ny bokning</div>
+    <div class="row">
+      <div class="field"><label>Remiss / Patient</label><select id="bookRef"><option value="">Valj remiss...</option></select></div>
+      <div class="field"><label>Ansvarig lakare</label><input type="text" id="bookDoc" placeholder="Dr. Svensson"></div>
+      <div class="field"><label>Datum</label><input type="date" id="bookDate"></div>
+      <div class="field"><label>Tid</label><input type="time" id="bookTime" value="09:00"></div>
+    </div>
+    <div class="field"><label>Anteckning</label><textarea id="bookNote" placeholder="Forberedelser, utrustning..."></textarea></div>
+    <button class="btn btn-primary btn-sm" onclick="saveBooking()" style="margin-top:.5rem">Spara bokning</button>
+  </div>
+  <div class="form-card">
+    <div class="section-title">Bokade tider</div>
+    <div id="bookList"><p style="color:#9E9C96;font-size:14px">Inga bokningar annu.</p></div>
+  </div>
+</div>
+
+<div id="rptPage" class="page">
+  <div class="page-title">Rapporter</div>
+  <div class="page-sub">Statistik och dataexport.</div>
+  <div class="g2" style="margin-bottom:1.25rem">
+    <div class="form-card" style="margin-bottom:0"><div class="section-title">Remisser per manad</div><div class="ch"><canvas id="cMon"></canvas></div></div>
+    <div class="form-card" style="margin-bottom:0"><div class="section-title">Ogontryck fordelning</div><div class="ch"><canvas id="cIOP"></canvas></div></div>
+  </div>
+  <div class="form-card">
+    <div class="section-title">Exportera</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-outline btn-sm" onclick="exportCSV()">Exportera CSV</button>
+      <button class="btn btn-outline btn-sm" onclick="exportJSON()">Exportera JSON</button>
+    </div>
+  </div>
+</div>
+
+<div id="dcmPage" class="page">
+  <div class="page-title">DICOM-visare</div>
+  <div class="page-sub">Oppna och granska DICOM-filer.</div>
+  <div class="form-card">
+    <div id="dcmAlert" class="alert"></div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('dcmIn').click()">Oppna DICOM-fil (.dcm)</button>
+      <input type="file" id="dcmIn" accept=".dcm,.dicom" style="display:none" onchange="loadDCM(this)">
+      <span id="dcmName" style="font-size:13px;color:#9E9C96"></span>
+      <span id="dcmLoad" style="font-size:13px;color:#0F6E56;display:none">Laddar...</span>
+    </div>
+    <div id="dcmView" style="background:#111;border-radius:8px;min-height:440px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+      <div id="dcmPh" style="text-align:center;color:#666">
+        <div style="font-size:48px;margin-bottom:1rem">&#127973;</div>
+        <div style="font-size:14px">Oppna en DICOM-fil for att visa den har</div>
+      </div>
+      <canvas id="dcmCanvas" style="display:none;max-width:100%;max-height:440px"></canvas>
+    </div>
+    <div id="dcmCtrl" style="display:none;margin-top:1rem">
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:1;min-width:160px">
+          <label style="font-size:12px;color:#6B6860;display:block;margin-bottom:4px">Ljusstyrka</label>
+          <input type="range" id="dcmBr" min="-150" max="150" value="0" oninput="dcmFilter()" style="width:100%">
+        </div>
+        <div style="flex:1;min-width:160px">
+          <label style="font-size:12px;color:#6B6860;display:block;margin-bottom:4px">Kontrast</label>
+          <input type="range" id="dcmCo" min="0.1" max="3" step="0.1" value="1" oninput="dcmFilter()" style="width:100%">
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="dcmRotate()">Rotera</button>
+          <button class="btn btn-outline btn-sm" onclick="dcmInvert()">Invertera</button>
+          <button class="btn btn-outline btn-sm" onclick="dcmReset()">Aterstaell</button>
+        </div>
+      </div>
+      <div id="dcmMeta" style="margin-top:1rem;padding:1rem;background:#F7F6F2;border-radius:6px;font-size:12px;font-family:monospace;color:#6B6860;line-height:1.8"></div>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+  <footer>
+    <span>OptiVision Klinikportal v1.0 - GDPR - PDL 2008:355</span>
+    <span id="sessionInfo">Session aktiv</span>
+  </footer>
+</div>
+
+<div class="overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">Remissdetaljer</div>
+    <div id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="setStatus('pending')">Pagaende</button>
+      <button class="btn btn-primary btn-sm" onclick="setStatus('reviewed')">Granskad</button>
+      <button class="btn btn-outline btn-sm" onclick="closeModal()">Stang</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var sb=null,demo=false,user=null,pendingEmail='',selectedId=null;
+var jsEl=document.getElementById('jsStatus');
+if(jsEl){jsEl.textContent='Laddad OK';jsEl.style.color='#1A6B3C';}
+
+var allRefs=[],bookings=[];
+var cPriInst=null,cStaInst=null,cMonInst=null,cIOPInst=null;
+var dcmOrig=null,dcmInv=false;
+
+function goTo(id){
+  var ids=['loginScreen','otpScreen','appScreen'];
+  for(var i=0;i<ids.length;i++){
+    var el=document.getElementById(ids[i]);
+    if(!el) continue;
+    if(ids[i]===id) el.style.display='flex';
+    else el.style.display='none';
+  }
+}
+
+function showApp(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('otpScreen').style.display='none';
+  document.getElementById('appScreen').style.display='flex';
+}
+
+function showPage(id,btn){
+  var pages=document.querySelectorAll('.page');
+  for(var i=0;i<pages.length;i++) pages[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  var tabs=document.querySelectorAll('.tab');
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('active');
+  if(btn) btn.classList.add('active');
+  if(id==='rptPage') renderReports();
+  if(id==='calPage') fillBookingRefs();
+}
+
+function sa(id,msg,type){
+  var el=document.getElementById(id);
+  if(!el) return;
+  el.textContent=msg;
+  el.className='alert alert-'+type+' show';
+  if(type!=='danger') setTimeout(function(){el.classList.remove('show');},5000);
+}
+
+function startDemo(){
+  demo=true; sb=null;
+  user={email:'klinik@kliniken.se',id:'a1'};
+  allRefs=[
+    {id:'d1',fn:'Britta',ln:'Andersson',ssn:'520304-7890',dt:'2025-03-28',opt:'Erik Lindgren',iopR:'22',iopL:'20',pri:'urgent',st:'new',ana:'Forhojt ogontryck. Misstankt glaukom.',rep:''},
+    {id:'d2',fn:'Lars',ln:'Svensson',ssn:'680612-3421',dt:'2025-03-25',opt:'Erik Lindgren',iopR:'16',iopL:'15',pri:'routine',st:'reviewed',ana:'Rutinkontroll. Stabil myopi.',rep:'Granskad. Inga atgarder.'},
+    {id:'d3',fn:'Gunnel',ln:'Persson',ssn:'450901-5678',dt:'2025-04-01',opt:'Anna Berg',iopR:'18',iopL:'17',pri:'routine',st:'new',ana:'Nyupptackt katarakt.',rep:''},
+    {id:'d4',fn:'Sven',ln:'Karlsson',ssn:'440812-1234',dt:'2025-04-02',opt:'Erik Lindgren',iopR:'28',iopL:'26',pri:'emergency',st:'new',ana:'Kraftigt forhojt ogontryck. Akut.',rep:''},
+    {id:'d5',fn:'Maria',ln:'Nilsson',ssn:'780615-5678',dt:'2025-03-30',opt:'Anna Berg',iopR:'15',iopL:'16',pri:'routine',st:'pending',ana:'Kontroll efter laserbehandling.',rep:'Inbokad for uppfoljning.'}
+  ];
+  enterApp();
+}
+
+function doLogin(){
+  var email=document.getElementById('loginEmail').value.trim();
+  var pw=document.getElementById('loginPw').value;
+  if(!email||!pw){sa('loginAlert','Fyll i e-post och losenord.','danger');return;}
+  var btn=document.getElementById('loginBtn');
+  btn.innerHTML='<div class="spinner"></div>'; btn.disabled=true;
+  pendingEmail=email;
+  if(demo||!sb){
+    setTimeout(function(){
+      btn.textContent='Fortsatt'; btn.disabled=false;
+      document.getElementById('otpSub').textContent='Demo: ange koden 12345678';
+      goTo('otpScreen');
+    },600);
+    return;
+  }
+  sb.auth.signInWithPassword({email:email,password:pw}).then(function(res){
+    if(res.error){sa('loginAlert',res.error.message,'danger');btn.textContent='Fortsatt';btn.disabled=false;return;}
+    sb.auth.signInWithOtp({email:email}).then(function(){
+      document.getElementById('otpSub').textContent='Kod skickad till '+email;
+      goTo('otpScreen');
+      btn.textContent='Fortsatt'; btn.disabled=false;
+    });
+  });
+}
+
+function doOtp(){
+  var boxes=document.querySelectorAll('.otp-box');
+  var token='';
+  for(var i=0;i<boxes.length;i++) token+=boxes[i].value;
+  if(token.length!==8){sa('otpAlert','Ange alla 8 siffror.','danger');return;}
+  var btn=document.getElementById('otpBtn');
+  btn.innerHTML='<div class="spinner"></div>'; btn.disabled=true;
+  if(demo||!sb){
+    setTimeout(function(){
+      btn.textContent='Verifiera och logga in'; btn.disabled=false;
+      if(token==='12345678'){enterApp();}
+      else{sa('otpAlert','Fel kod. Demo-koden ar 12345678.','danger');}
+    },500);
+    return;
+  }
+  sb.auth.verifyOtp({email:pendingEmail,token:token,type:'email'}).then(function(res){
+    btn.textContent='Verifiera och logga in'; btn.disabled=false;
+    if(res.error){sa('otpAlert',res.error.message,'danger');return;}
+    user=res.data.user;
+    enterApp();
+  });
+}
+
+function resend(){
+  if(!sb){sa('otpAlert','Demo: kod ar alltid 12345678','info');return;}
+  sb.auth.signInWithOtp({email:pendingEmail});
+  sa('otpAlert','Ny kod skickad.','success');
+}
+
+function enterApp(){
+  document.getElementById('navEmail').textContent=user.email;
+  showApp();
+  loadData();
+  startTimer();
+}
+
+function doLogout(){
+  if(sb) sb.auth.signOut();
+  user=null; demo=false;
+  goTo('loginScreen');
+}
+
+function loadData(){
+  if(demo){renderAll(allRefs);return;}
+  if(!sb) return;
+  sb.from('referrals').select('*').order('created_at',{ascending:false}).limit(200).then(function(r){
+    allRefs=(r.data||[]).map(function(x){
+      return {id:x.id,fn:x.patient_first,ln:x.patient_last,ssn:x.ssn,dt:x.exam_date,
+        opt:x.optician,iopR:x.iop_right,iopL:x.iop_left,pri:x.priority,
+        st:x.status,ana:x.anamnesis,rep:x.review_notes||''};
+    });
+    renderAll(allRefs);
+  });
+}
+
+function renderAll(rows){
+  updateStats(rows);
+  renderDash(rows);
+  renderRefs(rows);
+  loadChartJS(function(){renderDashCharts(rows);});
+  fillBookingRefs();
+}
+
+function updateStats(rows){
+  var g=function(id,v){var el=document.getElementById(id);if(el) el.textContent=v;};
+  g('sTotal',rows.length);
+  g('sNew',rows.filter(function(r){return r.st==='new';}).length);
+  g('sUrgent',rows.filter(function(r){return r.pri!=='routine';}).length);
+  g('sDone',rows.filter(function(r){return r.st==='reviewed';}).length);
+}
+
+function pLbl(p){return p==='emergency'?'Akut':p==='urgent'?'Bradskande':'Rutin';}
+function pCol(p){return p==='emergency'?'#8B1F1F':p==='urgent'?'#7A4A10':'#1A6B3C';}
+function sBadge(s){
+  var map={new:'sn Ny',reviewed:'sr Granskad',pending:'sp Pagaende',emergency:'se Akut'};
+  var parts=(map[s]||'sn '+s).split(' ');
+  return '<span class="status '+parts[0]+'">'+parts.slice(1).join(' ')+'</span>';
+}
+
+function renderDash(rows){
+  var tbody=document.getElementById('dashBody');
+  if(!tbody) return;
+  var html='';
+  var list=rows.slice(0,8);
+  for(var i=0;i<list.length;i++){
+    var r=list[i];
+    html+='<tr><td><strong>'+r.fn+' '+r.ln+'</strong></td><td style="font-size:13px;color:#6B6860">'+r.opt+'</td><td>'+r.dt+'</td><td style="color:'+pCol(r.pri)+';font-weight:500">'+pLbl(r.pri)+'</td><td>'+sBadge(r.st)+'</td></tr>';
+  }
+  tbody.innerHTML=html||'<tr><td colspan="5" style="text-align:center;color:#9E9C96;padding:2rem">Inga remisser.</td></tr>';
+}
+
+function renderRefs(rows){
+  var tbody=document.getElementById('refBody');
+  if(!tbody) return;
+  var html='';
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i];
+    html+='<tr><td><strong>'+r.fn+' '+r.ln+'</strong><br><span style="font-size:12px;color:#9E9C96;font-family:monospace">'+r.ssn+'</span></td><td style="font-size:13px">'+r.opt+'</td><td>'+r.dt+'</td><td style="font-family:monospace;font-size:13px">'+(r.iopR||'-')+'/'+(r.iopL||'-')+'</td><td style="color:'+pCol(r.pri)+';font-weight:500">'+pLbl(r.pri)+'</td><td>'+sBadge(r.st)+'</td><td><button class="btn btn-outline btn-sm" onclick="openModal(\''+r.id+'\')">Granska</button></td></tr>';
+  }
+  tbody.innerHTML=html||'<tr><td colspan="7" style="text-align:center;color:#9E9C96;padding:2rem">Inga remisser.</td></tr>';
+}
+
+function filterRefs(){
+  var st=document.getElementById('fSt').value;
+  var pr=document.getElementById('fPr').value;
+  var q=document.getElementById('fSe').value.toLowerCase();
+  var f=allRefs.filter(function(r){
+    var name=(r.fn+' '+r.ln).toLowerCase();
+    var opt=(r.opt||'').toLowerCase();
+    return(!q||name.indexOf(q)>-1||opt.indexOf(q)>-1)&&(!st||r.st===st)&&(!pr||r.pri===pr);
+  });
+  renderRefs(f);
+}
+
+function openModal(id){
+  var r=null;
+  for(var i=0;i<allRefs.length;i++){if(allRefs[i].id===id){r=allRefs[i];break;}}
+  if(!r) return;
+  selectedId=id;
+  document.getElementById('modalBody').innerHTML=
+    '<div class="dr"><span class="dl">Patient</span><span><strong>'+r.fn+' '+r.ln+'</strong></span></div>'+
+    '<div class="dr"><span class="dl">Personnummer</span><span style="font-family:monospace">'+r.ssn+'</span></div>'+
+    '<div class="dr"><span class="dl">Datum</span><span>'+r.dt+'</span></div>'+
+    '<div class="dr"><span class="dl">Optiker</span><span>'+r.opt+'</span></div>'+
+    '<div class="dr"><span class="dl">IOP H/V</span><span>'+(r.iopR||'-')+'/'+(r.iopL||'-')+' mmHg</span></div>'+
+    '<div class="dr"><span class="dl">Prioritet</span><span style="color:'+pCol(r.pri)+';font-weight:500">'+pLbl(r.pri)+'</span></div>'+
+    '<div class="dr"><span class="dl">Status</span><span>'+sBadge(r.st)+'</span></div>'+
+    '<div style="margin-top:1rem"><div class="section-title">Anamnes</div><p style="font-size:14px;background:#F7F6F2;padding:1rem;border-radius:6px;line-height:1.7">'+r.ana+'</p></div>'+
+    '<div style="margin-top:1rem"><div class="section-title">Svar till optiker</div><textarea id="repTxt" style="width:100%;padding:10px;border:1px solid #E2E0D8;border-radius:6px;font-size:14px;font-family:inherit;min-height:80px;outline:none">'+r.rep+'</textarea></div>';
+
+document.getElementById(‘modal’).classList.add(‘open’);
+}
+
+function closeModal(){document.getElementById(‘modal’).classList.remove(‘open’);}
+
+function setStatus(st){
+if(!selectedId) return;
+var rep=document.getElementById(‘repTxt’)?document.getElementById(‘repTxt’).value:’’;
+for(var i=0;i<allRefs.length;i++){if(allRefs[i].id===selectedId){allRefs[i].st=st;allRefs[i].rep=rep;break;}}
+if(sb&&!demo) sb.from(‘referrals’).update({status:st,review_notes:rep}).eq(‘id’,selectedId).then(function(){});
+closeModal(); renderAll(allRefs);
+}
+
+function loadChartJS(cb){
+if(window.Chart){cb();return;}
+var s=document.createElement(‘script’);
+s.src=‘https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js’;
+s.onload=cb; document.head.appendChild(s);
+}
+
+function renderDashCharts(rows){
+if(!window.Chart) return;
+var ru=rows.filter(function(r){return r.pri===‘routine’;}).length;
+var ur=rows.filter(function(r){return r.pri===‘urgent’;}).length;
+var em=rows.filter(function(r){return r.pri===‘emergency’;}).length;
+var nw=rows.filter(function(r){return r.st===‘new’;}).length;
+var pe=rows.filter(function(r){return r.st===‘pending’;}).length;
+var re=rows.filter(function(r){return r.st===‘reviewed’;}).length;
+if(cPriInst) cPriInst.destroy();
+var c1=document.getElementById(‘cPri’);
+if(c1) cPriInst=new Chart(c1,{type:‘doughnut’,data:{labels:[‘Rutin’,‘Bradskande’,‘Akut’],datasets:[{data:[ru,ur,em],backgroundColor:[’#1D9E75’,’#BA7517’,’#A32D2D’],borderWidth:2}]},options:{plugins:{legend:{position:‘bottom’}},cutout:‘65%’,maintainAspectRatio:false}});
+if(cStaInst) cStaInst.destroy();
+var c2=document.getElementById(‘cSta’);
+if(c2) cStaInst=new Chart(c2,{type:‘doughnut’,data:{labels:[‘Nya’,‘Pagaende’,‘Granskade’],datasets:[{data:[nw,pe,re],backgroundColor:[’#1A4D8F’,’#7A4A10’,’#1A6B3C’],borderWidth:2}]},options:{plugins:{legend:{position:‘bottom’}},cutout:‘65%’,maintainAspectRatio:false}});
+}
+
+function renderReports(){
+loadChartJS(function(){
+var months={};
+allRefs.forEach(function(r){var m=(r.dt||’’).substring(0,7);if(m) months[m]=(months[m]||0)+1;});
+var mk=Object.keys(months).sort();
+if(cMonInst) cMonInst.destroy();
+var c3=document.getElementById(‘cMon’);
+if(c3) cMonInst=new Chart(c3,{type:‘bar’,data:{labels:mk,datasets:[{label:‘Remisser’,data:mk.map(function(k){return months[k];}),backgroundColor:’#0F6E56’,borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}},maintainAspectRatio:false}});
+var iop={‘0-14’:0,‘15-17’:0,‘18-21’:0,‘22-25’:0,‘26+’:0};
+allRefs.forEach(function(r){var v=parseFloat(r.iopR||0);if(!v) return;if(v<=14) iop[‘0-14’]++;else if(v<=17) iop[‘15-17’]++;else if(v<=21) iop[‘18-21’]++;else if(v<=25) iop[‘22-25’]++;else iop[‘26+’]++;});
+if(cIOPInst) cIOPInst.destroy();
+var c4=document.getElementById(‘cIOP’);
+if(c4) cIOPInst=new Chart(c4,{type:‘bar’,data:{labels:Object.keys(iop),datasets:[{label:‘Antal’,data:Object.values(iop),backgroundColor:[’#1D9E75’,’#1D9E75’,’#BA7517’,’#A32D2D’,’#A32D2D’],borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}},maintainAspectRatio:false}});
+});
+}
+
+function exportCSV(){
+var h=[‘Fornamn’,‘Efternamn’,‘Personnummer’,‘Datum’,‘Optiker’,‘IOP H’,‘IOP V’,‘Prioritet’,‘Status’];
+var csv=h.join(’;’)+’\n’;
+allRefs.forEach(function(r){csv+=[r.fn,r.ln,r.ssn||’’,r.dt||’’,r.opt||’’,r.iopR||’’,r.iopL||’’,r.pri||’’,r.st||’’].join(’;’)+’\n’;});
+var a=document.createElement(‘a’);a.href=URL.createObjectURL(new Blob([csv],{type:‘text/csv’}));a.download=‘remisser.csv’;a.click();
+}
+
+function exportJSON(){
+var a=document.createElement(‘a’);a.href=URL.createObjectURL(new Blob([JSON.stringify(allRefs,null,2)],{type:‘application/json’}));a.download=‘remisser.json’;a.click();
+}
+
+function fillBookingRefs(){
+var sel=document.getElementById(‘bookRef’);
+if(!sel) return;
+sel.innerHTML=’<option value="">Valj remiss…</option>’;
+for(var i=0;i<allRefs.length;i++){
+var r=allRefs[i];
+var o=document.createElement(‘option’);
+o.value=r.id; o.textContent=r.fn+’ ‘+r.ln+’ (’+r.dt+’)’;
+sel.appendChild(o);
+}
+renderBookings();
+}
+
+function saveBooking(){
+var ref=document.getElementById(‘bookRef’).value;
+var doc=document.getElementById(‘bookDoc’).value.trim();
+var date=document.getElementById(‘bookDate’).value;
+var time=document.getElementById(‘bookTime’).value;
+var note=document.getElementById(‘bookNote’).value.trim();
+if(!ref||!date){sa(‘loginAlert’,‘Valj remiss och datum.’,‘danger’);return;}
+var r=null;
+for(var i=0;i<allRefs.length;i++){if(allRefs[i].id===ref){r=allRefs[i];break;}}
+bookings.push({id:‘b’+Date.now(),name:r?r.fn+’ ‘+r.ln:’’,doctor:doc,date:date,time:time,note:note});
+document.getElementById(‘bookDate’).value=’’;
+document.getElementById(‘bookNote’).value=’’;
+renderBookings();
+}
+
+function renderBookings(){
+var el=document.getElementById(‘bookList’);
+if(!el) return;
+if(!bookings.length){el.innerHTML=’<p style="color:#9E9C96;font-size:14px">Inga bokningar annu.</p>’;return;}
+var sorted=bookings.slice().sort(function(a,b){return a.date>b.date?1:-1;});
+var html=’’;
+var mons=[‘Jan’,‘Feb’,‘Mar’,‘Apr’,‘Maj’,‘Jun’,‘Jul’,‘Aug’,‘Sep’,‘Okt’,‘Nov’,‘Dec’];
+sorted.forEach(function(b){
+var p=b.date.split(’-’);
+var mon=p[1]?mons[parseInt(p[1])-1]:’’;
+html+=’<div class="bi"><div class="bd"><div class="bday">’+p[2]+’</div><div class="bmon">’+mon+’</div></div><div style="flex:1"><strong style="font-size:14px">’+b.name+’</strong><br><span style="font-size:13px;color:#6B6860">’+b.time+(b.doctor?’ - ‘+b.doctor:’’)+’</span>’+(b.note?’<br><span style="font-size:12px;color:#9E9C96">’+b.note+’</span>’:’’)+’</div><button class="btn btn-outline btn-sm" onclick="removeBooking(\''+b.id+'\')">Ta bort</button></div>’;
+});
+el.innerHTML=html;
+}
+
+function removeBooking(id){bookings=bookings.filter(function(b){return b.id!==id;});renderBookings();}
+
+function loadDCM(input){
+var file=input.files[0];
+if(!file) return;
+document.getElementById(‘dcmName’).textContent=file.name;
+document.getElementById(‘dcmLoad’).style.display=‘inline’;
+document.getElementById(‘dcmLoad’).textContent=‘Laddar…’;
+sa(‘dcmAlert’,’’,’’);
+var reader=new FileReader();
+reader.onload=function(e){parseDCM(e.target.result,file.name);};
+reader.readAsArrayBuffer(file);
+}
+
+function parseDCM(buffer,filename){
+var bytes=new Uint8Array(buffer);
+var view=new DataView(buffer);
+var isLE=true;
+var rows=0,cols=0,bits=16,pixRep=0,spp=1;
+var ts=’’;
+var pOff=-1,pLen=0;
+var meta={Fil:filename};
+var isDicom=bytes[128]===68&&bytes[129]===73&&bytes[130]===67&&bytes[131]===77;
+var offset=isDicom?132:0;
+
+while(offset<buffer.byteLength-8){
+try{
+var gr=view.getUint16(offset,isLE);
+var el=view.getUint16(offset+2,isLE);
+var vr=String.fromCharCode(bytes[offset+4],bytes[offset+5]);
+var len,dOff;
+if(bytes[offset+4]>=65&&bytes[offset+4]<=90&&bytes[offset+5]>=65&&bytes[offset+5]<=90){
+if([‘OB’,‘OW’,‘SQ’,‘UC’,‘UR’,‘UT’,‘UN’].indexOf(vr)>=0){len=view.getUint32(offset+8,isLE);dOff=offset+12;}
+else{len=view.getUint16(offset+6,isLE);dOff=offset+8;}
+} else {len=view.getUint32(offset+4,isLE);dOff=offset+8;}
+
+```
+  if(len===0xFFFFFFFF){
+    if(gr===0x7FE0&&el===0x0010){
+      var p=dOff;
+      while(p<buffer.byteLength-8){
+        var ig=view.getUint16(p,isLE),ie=view.getUint16(p+2,isLE),il=view.getUint32(p+4,isLE);
+        if(ig===0xFFFE&&ie===0xE000&&il!==0xFFFFFFFF&&il>0){pOff=p+8;pLen=il;break;}
+        p+=8+(il===0xFFFFFFFF?0:il);
+      }
+      break;
+    }
+    offset+=8; continue;
+  }
+
+  var str=function(o,l){try{return new TextDecoder().decode(bytes.slice(o,o+Math.min(l,64))).trim();}catch(e){return '';}};
+  if(gr===0x0002&&el===0x0010) ts=str(dOff,len);
+  if(gr===0x0008&&el===0x0060) meta['Modalitet']=str(dOff,len);
+  if(gr===0x0008&&el===0x0020) meta['Datum']=str(dOff,len);
+  if(gr===0x0010&&el===0x0010) meta['Patient']=str(dOff,len);
+  if(gr===0x0008&&el===0x103E) meta['Beskrivning']=str(dOff,len);
+  if(gr===0x0028&&el===0x0010) rows=view.getUint16(dOff,isLE);
+  if(gr===0x0028&&el===0x0011) cols=view.getUint16(dOff,isLE);
+  if(gr===0x0028&&el===0x0100) bits=view.getUint16(dOff,isLE);
+  if(gr===0x0028&&el===0x0103) pixRep=view.getUint16(dOff,isLE);
+  if(gr===0x0028&&el===0x0002) spp=view.getUint16(dOff,isLE);
+  if(gr===0x7FE0&&el===0x0010){pOff=dOff;pLen=len;break;}
+  if(len>0&&dOff+len<=buffer.byteLength) offset=dOff+len;
+  else offset+=8;
+}catch(e){offset+=2;}
+```
+
+}
+
+meta[‘Storlek’]=cols+‘x’+rows;
+meta[‘Transfer Syntax’]=ts||‘okand’;
+document.getElementById(‘dcmLoad’).style.display=‘none’;
+
+if(pOff<0||!rows||!cols){
+sa(‘dcmAlert’,‘Ingen pixeldata hittades. Topcon-filer anvander JPEG2000 som kravs en server-side konverterare. Exportera bilden som PDF fran Topcon och bifoga den i remissen istallet.’,‘danger’);
+showDCMMeta(meta);
+return;
+}
+
+var pBytes=new Uint8Array(buffer,pOff,Math.min(pLen||buffer.byteLength,buffer.byteLength-pOff));
+var isJPEG2k=ts.indexOf(‘1.2.840.10008.1.2.4.9’)>=0;
+var isJPEG=ts.indexOf(‘1.2.840.10008.1.2.4.5’)>=0||ts.indexOf(‘1.2.840.10008.1.2.4.70’)>=0||(pBytes[0]===0xFF&&pBytes[1]===0xD8);
+
+if(isJPEG2k){
+sa(‘dcmAlert’,‘JPEG2000-komprimering (Topcon) kan inte avkodas i webblasaren. Exportera bilden som PDF fran Topcon och bifoga i remissen.’,‘danger’);
+showDCMMeta(meta);
+} else if(isJPEG){
+var blob=new Blob([pBytes],{type:‘image/jpeg’});
+var url=URL.createObjectURL(blob);
+var img=new Image();
+img.onload=function(){
+var c=document.getElementById(‘dcmCanvas’);
+c.width=img.width; c.height=img.height;
+var ctx=c.getContext(‘2d’);
+ctx.drawImage(img,0,0);
+dcmOrig=ctx.getImageData(0,0,img.width,img.height);
+dcmInv=false;
+showDCMCanvas(meta);
+URL.revokeObjectURL(url);
+};
+img.onerror=function(){URL.revokeObjectURL(url);sa(‘dcmAlert’,‘Kunde inte avkoda JPEG.’,‘danger’);};
+img.src=url;
+} else {
+var c=document.getElementById(‘dcmCanvas’);
+c.width=cols; c.height=rows;
+var ctx=c.getContext(‘2d’);
+var id2=ctx.createImageData(cols,rows);
+var np=rows*cols;
+if(bits===16){
+var buf=pBytes.buffer.slice(pBytes.byteOffset,pBytes.byteOffset+pBytes.byteLength);
+var px=pixRep===1?new Int16Array(buf):new Uint16Array(buf);
+var mn=px[0],mx=px[0];
+for(var i=1;i<Math.min(np,px.length);i++){if(px[i]<mn)mn=px[i];if(px[i]>mx)mx=px[i];}
+var rng=mx-mn||1;
+for(var i=0;i<Math.min(np,px.length);i++){var v=Math.round(((px[i]-mn)/rng)*255);id2.data[i*4]=v;id2.data[i*4+1]=v;id2.data[i*4+2]=v;id2.data[i*4+3]=255;}
+} else if(spp===3){
+for(var i=0;i<Math.min(np,Math.floor(pBytes.length/3));i++){id2.data[i*4]=pBytes[i*3];id2.data[i*4+1]=pBytes[i*3+1];id2.data[i*4+2]=pBytes[i*3+2];id2.data[i*4+3]=255;}
+} else {
+for(var i=0;i<Math.min(np,pBytes.length);i++){id2.data[i*4]=pBytes[i];id2.data[i*4+1]=pBytes[i];id2.data[i*4+2]=pBytes[i];id2.data[i*4+3]=255;}
+}
+ctx.putImageData(id2,0,0);
+dcmOrig=ctx.getImageData(0,0,cols,rows);
+dcmInv=false;
+showDCMCanvas(meta);
+}
+}
+
+function showDCMCanvas(meta){
+document.getElementById(‘dcmPh’).style.display=‘none’;
+var c=document.getElementById(‘dcmCanvas’);
+c.style.display=‘block’;
+document.getElementById(‘dcmCtrl’).style.display=‘block’;
+showDCMMeta(meta);
+}
+
+function showDCMMeta(meta){
+document.getElementById(‘dcmMeta’).innerHTML=Object.keys(meta).filter(function(k){return meta[k];}).map(function(k){return ‘<span style="color:#0F6E56">’+k+’:</span> ‘+meta[k];}).join(’<br>’);
+document.getElementById(‘dcmCtrl’).style.display=‘block’;
+}
+
+function dcmFilter(){
+if(!dcmOrig) return;
+var c=document.getElementById(‘dcmCanvas’);
+var ctx=c.getContext(‘2d’);
+var br=parseInt(document.getElementById(‘dcmBr’).value);
+var co=parseFloat(document.getElementById(‘dcmCo’).value);
+var nd=ctx.createImageData(dcmOrig.width,dcmOrig.height);
+for(var i=0;i<dcmOrig.data.length;i+=4){
+for(var j=0;j<3;j++){var v=dcmOrig.data[i+j]*co+br;if(dcmInv) v=255-v;nd.data[i+j]=Math.max(0,Math.min(255,Math.round(v)));}
+nd.data[i+3]=255;
+}
+ctx.putImageData(nd,0,0);
+}
+
+function dcmRotate(){
+if(!dcmOrig) return;
+var c=document.getElementById(‘dcmCanvas’);
+var ctx=c.getContext(‘2d’);
+var w=c.width,h=c.height;
+var tmp=document.createElement(‘canvas’);tmp.width=h;tmp.height=w;
+var tc=tmp.getContext(‘2d’);tc.translate(h/2,w/2);tc.rotate(Math.PI/2);tc.drawImage(c,-w/2,-h/2);
+c.width=h;c.height=w;ctx.drawImage(tmp,0,0);
+dcmOrig=ctx.getImageData(0,0,c.width,c.height);
+}
+
+function dcmInvert(){dcmInv=!dcmInv;dcmFilter();}
+
+function dcmReset(){
+dcmInv=false;
+document.getElementById(‘dcmBr’).value=0;
+document.getElementById(‘dcmCo’).value=1;
+if(dcmOrig){var c=document.getElementById(‘dcmCanvas’);c.getContext(‘2d’).putImageData(dcmOrig,0,0);}
+}
+
+function startTimer(){
+var secs=8*3600;
+var info=document.getElementById(‘sessionInfo’);
+setInterval(function(){
+secs–;
+if(secs<=0){doLogout();return;}
+var h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60);
+if(info) info.textContent=’Session: ’+h+’h ’+m+‘m kvar’;
+},1000);
+}
+
+var boxes=document.querySelectorAll(’.otp-box’);
+for(var i=0;i<boxes.length;i++){
+(function(box,idx){
+box.addEventListener(‘input’,function(){if(box.value&&idx<boxes.length-1) boxes[idx+1].focus();});
+box.addEventListener(‘keydown’,function(e){if(e.key===‘Backspace’&&!box.value&&idx>0) boxes[idx-1].focus();});
+})(boxes[i],i);
+}
+</script>
+
+</body>
+</html>
